@@ -21,7 +21,7 @@ for root, dirs, files in os.walk(data_path):
     # print(files)
         
         cat = root_split[2]
-        if cat in ['books', 'dvd', 'music']:
+        if cat in ['books', 'dvd', 'music', 'video']:
             continue
         
         if files[0] == 'all.review':   
