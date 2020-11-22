@@ -1,3 +1,4 @@
-sorted_data/
+*.review
+*.balanced
 *.gz
 *.docx
