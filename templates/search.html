@@ -4,20 +4,27 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <style type="text/css">
-    .center {
-  position: absolute;
-  top: 50%;
-  width: 100%;
-  text-align: center;
-  font-size: 18px;
-}
+    div.wrapper {
+    position: absolute;
+    top: 30%;
+    width: 100%;
+    text-align: center;
+    font-size: 22px;
+    }
+    input[type="text"] {
+             position: relative;
+             display: block;
+             margin : 0 auto;
+    }
     </style>
 </head>
 <body>
       <form action = "http://localhost:5000" method = "post">
-         <p style="align:center;">Enter Search Keyword:</p>
-         <input type = "text" size="30" name = "nm" Style="align:center;">
-         <input type = "submit" size="30" value = "submit" Style="align:center;">
+          <div class="wrapper">
+             <p>Enter Search Keyword:</p>
+              <input type = "text" name = "nm" >
+              <input type = "submit" value = "search" >
+          </div>
       </form>
 </body>
 </html>
