@@ -77,10 +77,9 @@ for root, dirs, files in os.walk(data_path):
             print(cat, 'has clean file')
         
         df = pd.read_csv(path+'.clean')
-        print('Inputting into MySQL')
         try:
             df.to_sql(name=cat, con=engine, if_exists='fail', index=False, chunksize=1000)
         except:
-            print('SQL upload failed for'+cat+': Check if already exists')
+            print('SQL upload failed for '+cat+': Check if already exists')
 
 print('review sentiment database populated')
