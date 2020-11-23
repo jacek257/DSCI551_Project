@@ -27,8 +27,6 @@ def get_review(keyword, category=None):
     
     rdd = _get_rdd(keyword, spark)
     df = spark.read.option("multiline", "true").json(rdd).sort('product_name')
-    if category:
-        df = df.filter(df.product_type == category)
     
     df2 = df.selectExpr('product_type', 'cast(rating as float) rating')
     avg_ratings = df2.groupBy('product_type').agg(fxn.round(fxn.mean('rating').alias('avg_rating'),2)).sort('product_type').collect()
@@ -39,9 +37,10 @@ def get_review(keyword, category=None):
             rating.append(entity)
         ratings.append(rating)
     
-    ratings.append(['Total', round(np.mean(np.array(ratings)[:,1].astype(np.float)),2)])
+    ratings.append(['All', round(np.mean(np.array(ratings)[:,1].astype(np.float)),2)])
     
-    # print(ratings)
+    if category:
+        df = df.filter(df.product_type == category)
     
     reviews = set()
     for item in df.collect():
@@ -49,7 +48,6 @@ def get_review(keyword, category=None):
         for entity in item:
             review.append(entity)
         reviews.add(tuple(review))
-    # reviews = map(lambda x : x.asDict(), df.collect())
     
     return reviews, ratings
 
@@ -75,7 +73,7 @@ def get_sentiment( keyword):
             output.append([table] + list(out))
     
     if len(output):
-        output.append(['Total', sum(np.array(output)[:,1].astype(int)), sum(np.array(output)[:,2].astype(int))])
+        output.append(['All', sum(np.array(output)[:,1].astype(int)), sum(np.array(output)[:,2].astype(int))])
     else:
         error = True
     
@@ -94,6 +92,10 @@ def get_info(keyword, category=None):
             if ratings[i][0].replace(' ','_').replace('amp;','') == sentiment[j][0]:
                 sentiment[j].append(ratings[i][1])
                 break
+    
+    for i in range(len(sentiment)):
+        if len(sentiment[i]) < 4:
+            sentiment[i].append('')
     
     
     

@@ -10,8 +10,6 @@ def re_search(word):
     else:
         word = request.form['nm']
         return redirect(url_for('keyword', word=word))
-        
-    return render_template('search2.html', word=word)
 
 @app.route('/keyword=<word>', methods=['POST', 'GET'])
 def keyword(word):
@@ -19,7 +17,19 @@ def keyword(word):
     if error:
         return redirect(url_for('re_search', word=word))
     else:
-        return render_template('index.html', labels=sentiment, content=review)
+        return render_template('index.html', word=word, labels=sentiment, content=review)
+    
+@app.route('/keyword=<word> category=<cat>', methods=['POST', 'GET'])
+def sub_keyword(word, cat):
+    if cat == 'All':
+        cat = None
+        
+    review, sentiment, error = back.get_info(word.strip(), cat)
+    
+    if error:
+        return redirect(url_for('re_search', word=word))
+    else:
+        return render_template('index.html', word=word, labels=sentiment, content=review)
 
 
 @app.route('/', methods=['POST', 'GET'])
