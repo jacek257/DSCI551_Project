@@ -71,6 +71,8 @@ def get_sentiment( keyword):
         cursor.execute("SELECT positive, negative FROM `"+table+'` WHERE keyword="'+keyword+'";')
         out = cursor.fetchone()
         if out:
+            print(table)
+            print(out)
             output.append([table] + list(out))
     
     if len(output):
@@ -88,14 +90,12 @@ def get_info(keyword, category=None):
     
     reviews, ratings = get_review(keyword, category)
     
-    i = 0
-    offset = 0
-    while i < len(ratings):
-        if sentiment[i+offset][0] == ratings[i][0].replace(' ','_').replace('amp;',''):
-            sentiment[i+offset].append(ratings[i][1])
-            i += 1
-        else:
-            sentiment[i+offset].append('')
-            offset += 1
+    # for i in range(len(ratings)):
+    #     for j in range(len(sentiment)):
+    #         if ratings[i][0] == sentiment[j][0]:
+    #             sentiment[j].append(ratings[i][0])
+    #             break
+    
+    
     
     return reviews, sentiment, error

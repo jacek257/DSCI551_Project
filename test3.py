@@ -3,12 +3,21 @@ import query_backend as back
 
 app = Flask(__name__)
 
+@app.route('/<word>', methods=['POST','GET'])
+def re_search(word):
+    if request.method == 'GET':
+        return render_template('search2.html', word=word)
+    else:
+        word = request.form['nm']
+        return redirect(url_for('keyword', word=word))
+        
+    return render_template('search2.html', word=word)
 
-@app.route('/keyword=<word>')
+@app.route('/keyword=<word>', methods=['POST', 'GET'])
 def keyword(word):
     review, sentiment, error = back.get_info(word.strip())
     if error:
-        return render_template('search.html')
+        return redirect(url_for('re_search', word=word))
     else:
         return render_template('index.html', labels=sentiment, content=review)
 
