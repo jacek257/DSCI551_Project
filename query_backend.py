@@ -8,6 +8,7 @@ Created on Sun Nov 22 15:30:39 2020
 import pymongo
 from bson.json_util import dumps
 from pyspark.sql import SparkSession
+from pyspark.sql import functions as fxn
 import mysql.connector 
 import numpy as np
 
@@ -29,8 +30,18 @@ def get_review(keyword, category=None):
     if category:
         df = df.filter(df.product_type == category)
     
-    # avg_ratings = df.groupBy('product_type').avg('rating').sort('product_type').collect()
-    # print(avg_ratings)
+    df2 = df.selectExpr('product_type', 'cast(rating as float) rating')
+    avg_ratings = df2.groupBy('product_type').agg(fxn.round(fxn.mean('rating').alias('avg_rating'),2)).sort('product_type').collect()
+    ratings = []
+    for item in avg_ratings:
+        rating = []
+        for entity in item:
+            rating.append(entity)
+        ratings.append(rating)
+    
+    ratings.append(['Total', round(np.mean(np.array(ratings)[:,1].astype(np.float)),2)])
+    
+    # print(ratings)
     
     reviews = set()
     for item in df.collect():
@@ -40,7 +51,7 @@ def get_review(keyword, category=None):
         reviews.add(tuple(review))
     # reviews = map(lambda x : x.asDict(), df.collect())
     
-    return reviews
+    return reviews, ratings
 
 def get_sentiment( keyword):
     error = False
@@ -75,6 +86,16 @@ def get_info(keyword, category=None):
     if error:
         return None, None, error
     
-    reviews = get_review(keyword, category)
+    reviews, ratings = get_review(keyword, category)
+    
+    i = 0
+    offset = 0
+    while i < len(ratings):
+        if sentiment[i+offset][0] == ratings[i][0].replace(' ','_').replace('amp;',''):
+            sentiment[i+offset].append(ratings[i][1])
+            i += 1
+        else:
+            sentiment[i+offset].append('')
+            offset += 1
     
     return reviews, sentiment, error
