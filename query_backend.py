@@ -11,49 +11,70 @@ from pyspark.sql import SparkSession
 import mysql.connector 
 import numpy as np
 
-class request:
-    def _get_rdd(self, keyword, spark):
-        client = pymongo.MongoClient("mongodb://localhost:27017/")
-        db = client['reviews']
-        col = db['all']
+def _get_rdd(keyword, spark):
+    client = pymongo.MongoClient("mongodb://localhost:27017/")
+    db = client['reviews']
+    col = db['all']
+
+    doc = list(col.find({'review_text' : {'$regex' : '\\b'+keyword+'\\b', '$options' : 'i'}}, {'_id' : 0, 'product_type_1' : 0, 'unique_id' : 0, 'unique_id_1' :0}))
     
-        doc = list(col.find({'review_text' : {'$regex' : '\\b'+keyword+'\\b', '$options' : 'i'}}))
-        
-        return spark.sparkContext.parallelize(doc).map(lambda x: dumps(x, indent=0))
+    return spark.sparkContext.parallelize(doc).map(lambda x: dumps(x, indent=0))
+
+def get_review(keyword, category=None):
+
+    spark = SparkSession.builder.appName('sentiment').getOrCreate()
     
-    def _get_review(self, keyword, category=None):
+    rdd = _get_rdd(keyword, spark)
+    df = spark.read.option("multiline", "true").json(rdd).sort('product_name')
+    if category:
+        df = df.filter(df.product_type == category)
     
-        spark = SparkSession.builder.appName('sentiment').getOrCreate()
-        
-        rdd = self._get_rdd(keyword, spark)
-        df = spark.read.option("multiline", "true").json(rdd)
-        if category:
-            df = df.filter(df.product_type == category)
-        return df.collect()
+    # avg_ratings = df.groupBy('product_type').avg('rating').sort('product_type').collect()
+    # print(avg_ratings)
     
-    def _get_sentiment(self, keyword):
-        db = mysql.connector.connect(host='localhost', user='root', password='root', database='review_sentiment')
-        cursor = db.cursor()
-        
-        cursor.execute("SHOW TABLES")
-        
-        tables = cursor.fetchall()
-        
-        output = []
-        for table in tables:
-            table = table[0]
-            # print(table)
-            cursor.execute("SELECT * FROM `"+table+'` WHERE keyword="'+keyword+'";')
-            out = cursor.fetchone()
-            if out:
-                output.append([table] + list(out))
-        
-        output.append(['Total', sum(np.array(output)[:,2].astype(int)), sum(np.array(output)[:,3].astype(int))])
-        
-        return output
+    reviews = set()
+    for item in df.collect():
+        review = []
+        for entity in item:
+            review.append(entity)
+        reviews.add(tuple(review))
+    # reviews = map(lambda x : x.asDict(), df.collect())
     
-    def get_info(self, keyword, category=None):
-        reviews = self._get_review(keyword, category)
-        sentiment = self._get_sentiment(keyword)
-        
-        return reviews, sentiment
+    return reviews
+
+def get_sentiment( keyword):
+    error = False
+    
+    db = mysql.connector.connect(host='localhost', user='root', password='root', database='review_sentiment')
+    cursor = db.cursor()
+    
+    cursor.execute("SHOW TABLES")
+    
+    tables = cursor.fetchall()
+    
+    output = []
+    keyword = keyword.replace(' ','_')
+    for table in tables:
+        table = table[0]
+        # print(table)
+        cursor.execute("SELECT positive, negative FROM `"+table+'` WHERE keyword="'+keyword+'";')
+        out = cursor.fetchone()
+        if out:
+            output.append([table] + list(out))
+    
+    if len(output):
+        output.append(['Total', sum(np.array(output)[:,1].astype(int)), sum(np.array(output)[:,2].astype(int))])
+    else:
+        error = True
+    
+    return output, error
+
+def get_info(keyword, category=None):
+    sentiment, error = get_sentiment(keyword)
+    
+    if error:
+        return None, None, error
+    
+    reviews = get_review(keyword, category)
+    
+    return reviews, sentiment, error
