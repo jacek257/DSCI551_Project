@@ -16,7 +16,7 @@
                     <table class="table table-striped table-bordered table-hover">
                         <thead>
                         <tr>
-                            <th scope="col">KeyWord</th>
+                            <th scope="col">Category</th>
                             <th scope="col">Positive</th>
                             <th scope="col">Negative</th>
                         </tr>
@@ -31,12 +31,30 @@
                         {% endfor %}
                         </tbody>
                     </table>
+
+                    <div class="panel-heading">
+                        <h3>Related Reviews</h3>
+                    </div>
                     <table class="table table-striped table-bordered table-hover">
+                        <thead>
+                        <tr>
+                            <th scope="col">asin</th>
+                            <th scope="col">date</th>
+                            <th scope="col">helpful</th>
+                            <th scope="col">product_name</th>
+                            <th scope="col">product_type</th>
+                            <th scope="col">rating</th>
+                            <th scope="col">review_text</th>
+                            <th scope="col">reviewer</th>
+                            <th scope="col">reviewer_location</th>
+                            <th scope="col">title</th>
+                        </tr>
+                        </thead>
                         <tbody>
                         {% for i in content %}
                             <tr>
                                 {% for j in i %}
-                                    <td>{{ j }}</td>
+                                    <td>{{ j }} <br> </td>
                                 {% endfor %}
                             </tr>
                         {% endfor %}
