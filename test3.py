@@ -7,10 +7,10 @@ app = Flask(__name__)
 @app.route('/result/<name>')
 def result(name):
     review, sentiment = back.get_info(name)
-    return render_template('index.html', labels=review, content=sentiment)
+    return render_template('index.html', labels=sentiment, content=review)
 
 
-@app.route('/search', methods=['POST', 'GET'])
+@app.route('/', methods=['POST', 'GET'])
 def login():
     if request.method == 'POST':
         user = request.form['nm']
